@@ -10,7 +10,8 @@ export const tokenStore = {
 
 /** Cliente único de la API /api/v2/rrhh. */
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api/v2/rrhh',
+  // Sin VITE_API_URL se usa el mismo dominio donde se publica la app.
+  baseURL: import.meta.env.VITE_API_URL || '/api/v2/rrhh',
   headers: { Accept: 'application/json' },
 });
 
