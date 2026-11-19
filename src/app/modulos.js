@@ -23,14 +23,14 @@ export const GRUPOS = [
     modulos: [
       { clave: 'solicitudes', nombre: 'Solicitudes de vacaciones', ruta: '/vacaciones/solicitudes', icono: 'solicitudes', estado: 'listo', descripcion: 'Lo que el personal pide desde la intranet.', indicador: 'sol_pendientes' },
       { clave: 'vacaciones', nombre: 'Vacaciones del personal', ruta: '/vacaciones/personal', icono: 'vacaciones', estado: 'listo', descripcion: 'Saldos, historial de goce y compra, registro en planilla.' },
-      { clave: 'permisos', nombre: 'Permisos', ruta: '/permisos', icono: 'permisos', estado: 'pendiente', descripcion: 'Permisos y salidas temporales.' },
+      { clave: 'permisos', nombre: 'Permisos', ruta: '/permisos', icono: 'permisos', estado: 'listo', descripcion: 'Formato de autorización: trabajador, jefe y RR.HH.' },
     ],
   },
   {
     nombre: 'Documentos',
     modulos: [
-      { clave: 'legajos', nombre: 'Legajo digital', ruta: '/legajos', icono: 'legajo', estado: 'api', descripcion: 'Documentos del trabajador y vencimientos.', indicador: 'legajos_por_vencer' },
-      { clave: 'boletas', nombre: 'Visualización de boletas', ruta: '/boletas', icono: 'boletas', estado: 'api', descripcion: 'Quién abrió su boleta y cuándo.' },
+      { clave: 'legajos', nombre: 'Legajo digital', ruta: '/legajos', icono: 'legajo', estado: 'listo', descripcion: 'Documentos del trabajador, versiones y vencimientos.', indicador: 'legajos_por_vencer' },
+      { clave: 'boletas', nombre: 'Visualización de boletas', ruta: '/boletas', icono: 'boletas', estado: 'listo', descripcion: 'Quién abrió su boleta y cuándo.' },
     ],
   },
 ];

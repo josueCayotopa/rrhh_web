@@ -71,5 +71,35 @@ export async function abrirPdf(url) {
   }
 }
 
+/**
+ * Descarga un archivo protegido (con el token) con el nombre que manda el
+ * servidor (Content-Disposition) o el indicado.
+ */
+export async function descargarArchivo(url, params, nombre) {
+  let r;
+  try {
+    r = await api.get(url, { params, responseType: 'blob' });
+  } catch (error) {
+    const blob = error?.response?.data;
+    if (blob instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await blob.text());
+      } catch {
+        // sin mensaje legible
+      }
+    }
+    throw error;
+  }
+  const cabecera = r.headers?.['content-disposition'] ?? '';
+  const delServidor = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cabecera)?.[1];
+  const enlace = document.createElement('a');
+  enlace.href = URL.createObjectURL(r.data);
+  enlace.download = nombre ?? (delServidor ? decodeURIComponent(delServidor) : 'archivo');
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  setTimeout(() => URL.revokeObjectURL(enlace.href), 60000);
+}
+
 /** Convierte la lista de empresas elegidas en el parámetro ?empresas= (vacío = todas). */
 export const empresasParam = (codigos) => (codigos?.length ? { empresas: codigos.join(',') } : {});

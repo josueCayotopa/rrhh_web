@@ -7,6 +7,9 @@ import EnConstruccionPage from '../features/inicio/pages/EnConstruccionPage';
 import ContratosPage from '../features/contratos/pages/ContratosPage';
 import EstructuraPage from '../features/estructura/pages/EstructuraPage';
 import PersonalPage from '../features/personal/pages/PersonalPage';
+import LegajosPage from '../features/legajos/pages/LegajosPage';
+import BoletasPage from '../features/boletas/pages/BoletasPage';
+import PermisosPage from '../features/permisos/pages/PermisosPage';
 import FichaPersonalPage from '../features/personal/pages/FichaPersonalPage';
 import SolicitudesVacPage from '../features/vacaciones/pages/SolicitudesVacPage';
 import VacacionesPersonalPage from '../features/vacaciones/pages/VacacionesPersonalPage';
@@ -32,6 +35,9 @@ export default function AppRouter() {
           <Route index element={<InicioPage />} />
           <Route path="personal" element={<PersonalPage />} />
           <Route path="personal/:empresa/:codPersonal" element={<FichaPersonalPage />} />
+          <Route path="legajos" element={<LegajosPage />} />
+          <Route path="boletas" element={<BoletasPage />} />
+          <Route path="permisos" element={<PermisosPage />} />
           <Route path="estructura" element={<EstructuraPage />} />
           <Route path="vacaciones/solicitudes" element={<SolicitudesVacPage />} />
           <Route path="vacaciones/personal" element={<VacacionesPersonalPage />} />
