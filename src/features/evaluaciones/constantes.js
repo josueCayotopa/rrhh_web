@@ -7,7 +7,7 @@ export const ESTADOS_EVALUACION = {
   EN_PROCESO: { texto: 'En evaluación', clase: 'badge-info' },
   PENDIENTE_APROBACION: { texto: 'Pendiente de aprobación', clase: 'badge-aviso' },
   APROBADA: { texto: 'Aprobada', clase: 'badge-ok' },
-  CERRADA: { texto: 'Cerrada', clase: 'badge-ok' },
+  CERRADA: { texto: 'Cerrada (sin aprobadores)', clase: 'badge-ok' },
   RECHAZADA: { texto: 'Rechazada', clase: 'badge-error' },
   CONTRATO_GENERADO: { texto: 'Contrato generado', clase: 'badge-neutro' },
 };

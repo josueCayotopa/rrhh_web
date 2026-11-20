@@ -30,11 +30,22 @@ const dmy = (v) => {
 };
 const nombrePropio = (t) => String(t ?? '').toLowerCase().replace(/(^|[\s,(])([a-záéíóúñ])/g, (m, a, b) => a + b.toUpperCase());
 const caja = (marcada) => `<span class="box">${marcada ? '✔' : ''}</span>`;
+/** '2026-11-19 08:05:00' → '19/11/2026 08:05' */
+const dmyHora = (v) => (v ? `${dmy(v)} ${String(v).slice(11, 16)}`.trim() : '');
 
-function firma(url) {
-  return url
+/**
+ * Línea de firma + sello con los datos de quien firmó (nombre, DNI, usuario y fecha/hora),
+ * como una firma digital. Sin firmante, la línea queda en blanco para firmar a mano.
+ */
+function firmaSello({ url, nombre, dni, usuario, fecha, pie, leyenda = 'Firmado digitalmente el' }) {
+  const linea = url
     ? `<div class="firma"><img src="${esc(url)}" alt="Firma"></div>`
     : '<div class="firma"></div>';
+  const sello = nombre
+    ? `<div class="sello"><b>${esc(nombrePropio(nombre))}</b><br>DNI ${esc(dni || '—')}${usuario ? ` · Usuario: ${esc(usuario)}` : ''}<br>`
+     + `${esc(leyenda)} ${esc(dmyHora(fecha))}</div>`
+    : '';
+  return `<div>${linea}<div class="pie">${esc(pie)}</div>${sello}</div>`;
 }
 
 export function htmlPermiso({ solicitud: s, documentos = [], logoUrl }) {
@@ -48,7 +59,10 @@ export function htmlPermiso({ solicitud: s, documentos = [], logoUrl }) {
   });
   const otroTexto = otros.map((d) => d.des_otro || d.des_tipo).join(', ');
   const autorizado = s.est_jefe === 'A';
-  const conforme = s.ind_conforme_trab === 'S';
+  // La solicitud es la firma del trabajador: desde la intranet la firma él mismo; si la registró RR.HH., queda constancia de quién.
+  const desdeIntranet = s.origen === 'INTRANET';
+  const fechaTrab = (desdeIntranet && s.fec_conforme_trab) || s.fecha_solicitud;
+  const resolvioRrhh = (s.etapa === 'APROBADA' || (s.etapa === 'RECHAZADA' && s.est_jefe !== 'R')) && s.fecha_aprobacion_rh;
   const nombre = nombrePropio(s.nombre_completo);
   const estadoTexto = {
     PENDIENTE_JEFE: 'Pendiente de autorización del jefe',
@@ -82,6 +96,7 @@ export function htmlPermiso({ solicitud: s, documentos = [], logoUrl }) {
   .firma { border-bottom:1.3px solid #000; height:52px; display:flex; align-items:flex-end; justify-content:center; }
   .firma img { max-height:48px; max-width:90%; object-fit:contain; }
   .pie { font-size:9.5px; font-weight:bold; margin-top:3px; }
+  .sello { margin-top:4px; border:1px solid #9ca3af; border-radius:4px; padding:4px 6px; font-size:9px; line-height:1.35; color:#1f2937; background:#f9fafb; }
   .estado { margin-top:16px; border-top:1px dashed #999; padding-top:6px; font-size:9.5px; color:#444; }
   @media print { body { padding: 8mm 12mm; } @page { size: A4 portrait; margin: 5mm; } }
 </style></head>
@@ -123,22 +138,36 @@ export function htmlPermiso({ solicitud: s, documentos = [], logoUrl }) {
 <h2>4. AUTORIZACIÓN</h2>
 <div class="fila"><span class="lbl">Nombre del Administrador de Sede:</span><span class="val">${esc(autorizado || s.est_jefe === 'R' ? nombrePropio(s.nom_jefe) : '')}</span></div>
 <div class="firmas">
-  <div>${firma(autorizado ? s.firma_jefe_url : null)}<div class="pie">Firma del Administrador</div></div>
+  ${firmaSello(autorizado
+    ? { url: s.firma_jefe_url, nombre: s.nom_jefe, dni: s.jefe_firma_dni, usuario: s.cod_usuario_jefe, fecha: s.fec_jefe, pie: 'Firma del Administrador' }
+    : { pie: 'Firma del Administrador' })}
   <div style="flex:.6"><div class="fila"><span class="lbl">Fecha:</span><span class="val">${esc(s.fec_jefe ? dmy(s.fec_jefe) : '')}</span></div></div>
 </div>
 <div style="margin-top:6px">Observaciones (si hubiera):</div>
 <div class="texto" style="min-height:34px">${esc([s.obs_jefe, s.obs_rrhh ? `RR.HH.: ${s.obs_rrhh}` : ''].filter(Boolean).join('\n'))}</div>
 
+<h2>APROBACIÓN DE RECURSOS HUMANOS</h2>
+<div class="firmas">
+  ${firmaSello(resolvioRrhh
+    ? { nombre: s.nom_rrhh || s.cod_usuario_rrhh, dni: s.rrhh_dni, usuario: s.cod_usuario_rrhh, fecha: s.fecha_aprobacion_rh,
+        pie: 'Firma de Recursos Humanos', leyenda: s.etapa === 'APROBADA' ? 'Aprobado digitalmente el' : 'Rechazado el' }
+    : { pie: 'Firma de Recursos Humanos' })}
+  <div style="flex:.6"><div class="fila"><span class="lbl">Fecha:</span><span class="val">${esc(resolvioRrhh ? dmy(s.fecha_aprobacion_rh) : '')}</span></div></div>
+</div>
+
 <h2>5. FIRMA DE CONFORMIDAD DEL TRABAJADOR</h2>
 <p>Declaro haber solicitado el presente permiso y estar conforme con los términos del mismo.</p>
 <div class="firmas">
-  <div>${firma(conforme ? s.firma_trab_url : null)}<div class="pie">Firma del trabajador</div></div>
-  <div style="flex:.6"><div class="fila"><span class="lbl">Fecha:</span><span class="val">${esc(conforme ? dmy(s.fec_conforme_trab) : '')}</span></div></div>
+  ${firmaSello(desdeIntranet
+    ? { url: s.firma_trab_url, nombre: s.nombre_completo, dni: s.dni, usuario: s.cod_usuario_solicita, fecha: fechaTrab,
+        pie: 'Firma del trabajador', leyenda: 'Solicitado y firmado digitalmente desde la intranet el' }
+    : { nombre: s.nombre_completo, dni: s.dni, fecha: fechaTrab,
+        pie: 'Firma del trabajador', leyenda: `Solicitud registrada por RR.HH. (usuario ${s.cod_usuario_solicita ?? '—'}) el` })}
+  <div style="flex:.6"><div class="fila"><span class="lbl">Fecha:</span><span class="val">${esc(dmy(fechaTrab))}</span></div></div>
 </div>
 
 <div class="estado">
   Estado: <b>${esc(estadoTexto)}</b>
-  ${s.etapa === 'APROBADA' && s.nom_rrhh ? ` · Aprobado por RR.HH.: ${esc(nombrePropio(s.nom_rrhh))} el ${esc(dmy(s.fecha_aprobacion_rh))}` : ''}
   ${s.afecta_salario === 'S' ? ' · <b>Afecta remuneración (sin goce de haber)</b>' : ''}
   · Registrado desde ${esc(s.origen === 'INTRANET' ? 'la intranet' : 'RR.HH.')} por ${esc(s.cod_usuario_solicita ?? '')}
 </div>
